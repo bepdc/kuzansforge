@@ -282,7 +282,7 @@
       <div class="info-row"><span class="info-dot"></span>Ritiro o spedizione da concordare</div>
     </div>
 
-    <form id="orderForm">
+    <form id="orderForm" action="https://formspree.io/f/xnpqdayj" method="POST">
       <div class="field-row">
         <div class="field">
           <label for="nome">Nome</label>
@@ -290,7 +290,7 @@
         </div>
         <div class="field">
           <label for="email">Email o telefono</label>
-          <input type="text" id="email" name="email" required>
+          <input type="text" id="email" name="_replyto" required>
         </div>
       </div>
       <div class="field">
@@ -311,8 +311,9 @@
           <input type="number" id="quantita" name="quantita" min="1" value="1">
         </div>
       </div>
+      <input type="hidden" name="_subject" value="Nuova richiesta di stampa da Kuzan's Forge">
       <button type="submit" class="submit-btn">Invia richiesta</button>
-      <p class="form-note">Il pulsante apre il tuo client email con il messaggio già scritto, verso kuzansforge@gmail.com</p>
+      <p class="form-note" id="formNote">Ricevo la tua richiesta direttamente via email, di solito rispondo entro un giorno o due.</p>
     </form>
   </div>
 </section>
@@ -452,24 +453,56 @@ CREATIONS.forEach((creation, idx) => {
   dots.forEach(d => d.addEventListener('click', () => goTo(parseInt(d.dataset.slide))));
 });
 
-document.getElementById('orderForm').addEventListener('submit', function(e){
+/*
+  INVIO DIRETTO VIA FORMSPREE:
+  1. Vai su formspree.io, registrati gratis (bastano pochi minuti).
+  2. Crea un nuovo form, ti darà un link tipo https://formspree.io/f/xxxxxxxx
+  3. Incolla quel link al posto di "INSERISCI-QUI-IL-TUO-ID" nell'attributo
+     action del <form id="orderForm"> qui sopra nell'HTML.
+  4. Da quel momento chi compila il modulo preme "Invia richiesta" e la mail
+     ti arriva direttamente nella casella collegata a Formspree, senza aprire
+     nessun programma di posta sul suo computer.
+  Il piano gratuito di Formspree copre un buon numero di invii al mese,
+  più che sufficiente per un'attività amatoriale.
+*/
+const orderForm = document.getElementById('orderForm');
+const formNote = document.getElementById('formNote');
+
+orderForm.addEventListener('submit', async function(e){
   e.preventDefault();
-  const nome = document.getElementById('nome').value;
-  const email = document.getElementById('email').value;
-  const cosa = document.getElementById('cosa').value;
-  const materiale = document.getElementById('materiale').value;
-  const quantita = document.getElementById('quantita').value;
 
-  const subject = encodeURIComponent('Richiesta di stampa 3D da ' + nome);
-  const body = encodeURIComponent(
-    'Nome: ' + nome + '\n' +
-    'Contatto: ' + email + '\n' +
-    'Materiale: ' + materiale + '\n' +
-    'Quantità: ' + quantita + '\n\n' +
-    'Descrizione:\n' + cosa
-  );
+  if (orderForm.action.includes('INSERISCI-QUI-IL-TUO-ID')){
+    formNote.textContent = 'Configurazione mancante: sostituisci l\'ID Formspree nel codice del form prima di pubblicare il sito.';
+    formNote.style.color = '#FF7A6B';
+    return;
+  }
 
-  window.location.href = 'mailto:kuzansforge@gmail.com?subject=' + subject + '&body=' + body;
+  const submitBtn = orderForm.querySelector('.submit-btn');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Invio in corso...';
+
+  try {
+    const response = await fetch(orderForm.action, {
+      method: 'POST',
+      body: new FormData(orderForm),
+      headers: { 'Accept': 'application/json' }
+    });
+
+    if (response.ok){
+      orderForm.reset();
+      formNote.textContent = 'Richiesta inviata! Ti risponderò entro un giorno o due.';
+      formNote.style.color = '#5FD8FF';
+      submitBtn.textContent = 'Invia richiesta';
+    } else {
+      throw new Error('Invio fallito');
+    }
+  } catch (err){
+    formNote.textContent = 'Qualcosa è andato storto nell\'invio. Riprova tra poco o scrivimi direttamente.';
+    formNote.style.color = '#FF7A6B';
+    submitBtn.textContent = 'Invia richiesta';
+  }
+
+  submitBtn.disabled = false;
 });
 </script>
 
