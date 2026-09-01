@@ -471,7 +471,7 @@ const formNote = document.getElementById('formNote');
 orderForm.addEventListener('submit', async function(e){
   e.preventDefault();
 
-  if (orderForm.action.includes('https://formspree.io/f/xnpqdayj')){
+  if (orderForm.action.includes('INSERISCI')){
     formNote.textContent = 'Configurazione mancante: sostituisci l\'ID Formspree nel codice del form prima di pubblicare il sito.';
     formNote.style.color = '#FF7A6B';
     return;
